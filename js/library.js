@@ -51,14 +51,14 @@ $(function () {
 
         },
         createPointers: function(){
-            var now = new Date(),
-                hourPointerLength = this.outsideCircle.attr('r') / 2,
-                minutePointerLength = this.outsideCircle.attr('r') * 0.75;
+            var now = new Date();
+            this.hourPointerLength = this.outsideCircle.attr('r') / 2;
+            this.minutePointerLength = this.outsideCircle.attr('r') * 0.75;
             var getHours = function (date) {
                 return date.getHours() % 12 + date.getMinutes() * 100/60 * 0.01;
             }
 
-            l = this.getPointerEnd(hourPointerLength,now.getHours(), now.getMinutes(), 12);
+            l = this.getPointerEnd(this.hourPointerLength,now.getHours(), now.getMinutes(), 12);
 
             this.pointers.hour = r.path([
                 "M",
@@ -71,7 +71,7 @@ $(function () {
 
             this.pointers.hour.attr({fill: '#51f', stroke: '#555', 'stroke-width': 5});
 
-            l = this.getPointerEnd(minutePointerLength,now.getMinutes(), now.getSeconds());
+            l = this.getPointerEnd(this.minutePointerLength,now.getMinutes(), now.getSeconds());
             this.pointers.minute = r.path([
                 "M",
                 this.point.x,
@@ -82,7 +82,7 @@ $(function () {
             ]);
             this.pointers.minute.attr({fill: '#51f', stroke: '#444', 'stroke-width': 3});
 
-            l = this.getPointerEnd(minutePointerLength,now.getSeconds());
+            l = this.getPointerEnd(this.minutePointerLength,now.getSeconds());
             this.pointers.second =  r.path([
                 "M",
                 this.point.x,
@@ -92,6 +92,64 @@ $(function () {
                 l.y
             ]);
             this.pointers.second.attr({fill: '#51f', stroke: '#333', 'stroke-width': 1});
+        },
+        pointersStart: function() {
+
+            //alert(pathSeconds);
+            $this = this;
+
+            this.pointers.second.loop = setInterval(
+                function() {
+                    var now = new Date();
+                    var l = $this.getPointerEnd($this.minutePointerLength, now.getSeconds());
+                    var pathSeconds = [
+                        "M",
+                        $this.point.x,
+                        $this.point.y,
+                        "l",
+                        l.x,
+                        l.y
+                    ];
+                    $this.pointers.second.animate({path: pathSeconds},10);
+                },
+                990
+            )
+
+            this.pointers.minute.loop = setInterval(
+                function() {
+                    var now = new Date();
+                    var l = $this.getPointerEnd($this.minutePointerLength, now.getMinutes(), now.getSeconds());
+                    var pathMinutes = [
+                        "M",
+                        $this.point.x,
+                        $this.point.y,
+                        "l",
+                        l.x,
+                        l.y
+                    ];
+                    $this.pointers.minute.animate({path: pathMinutes},10);
+                },
+                1000 * 29 + 990
+            )
+
+            this.pointers.hour.loop = setInterval(
+                function() {
+                    var now = new Date();
+                    var l = $this.getPointerEnd($this.hourPointerLength, now.getHours(), now.getMinutes(), 12);
+                    var pathHours = [
+                        "M",
+                        $this.point.x,
+                        $this.point.y,
+                        "l",
+                        l.x,
+                        l.y
+                    ];
+                    $this.pointers.hour.animate({path: pathHours},10);
+                },
+                1000 * 29 + 990
+            )
+
+
         }
     }
 
@@ -108,6 +166,7 @@ $(function () {
                     y:e.pageY
                 };
                 clock.createPointers();
+                clock.pointersStart();
             });
 
 
