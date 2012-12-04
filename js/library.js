@@ -153,7 +153,17 @@ $(function () {
         }
     }
 
+    $(document).mousemove(function(e){
+        $("#clock-tip").css({
+            left:e.pageX,
+            top:e.pageY
+        });
+    })
     $(document).click(function(e){
+
+        $(document).unbind('mousemove');
+        $("#clock-tip").hide();
+
         clock.insideCircle
             .attr({cx:e.pageX, cy:e.pageY})
             .animate({r: 40}, clock.appearanceTime);
