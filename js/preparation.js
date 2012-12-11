@@ -43,3 +43,54 @@ function getSubstrings(str) {
     }
     return result;
 }
+
+
+function has_conflicts(starts, ends) {
+    for (var i = 0; i< starts.length; i++) {
+        for(j = i+1; j < starts.length; j++) {
+            if((starts[i] <= starts[j] && starts[j] <= ends[i]) || (starts[i] <= ends[j] && ends[j] <= ends[i])){
+                return false;
+            }
+
+            if((starts[j] <= starts[i] && starts[i] <= ends[j]) || (starts[j] <= ends[i] && ends[i] <= ends[j])){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+starts = [1, 12, 5, 3, 8];
+ends =   [2, 13, 6, 4, 9];
+function has_conflicts1(starts, ends) {
+    var newStarts = new Array(), newEnds = new Array();
+    newStarts.push(starts[0]);
+    newEnds.push(ends[0]);
+    for (var i = 1; i < starts.length; i++) {
+        if (starts[i] > newEnds[newEnds.length - 1]) {
+            newStarts.push(starts[i]);
+            newEnds.push(ends[i]);
+            continue;
+        }
+        if (ends[i] < starts[0]) {
+            newStarts.unshift(starts[i]);
+            newEnds.unshift(ends[i]);
+            continue;
+        }
+        for(var j = 0; j < newStarts.length; j++) {
+            if (starts[i] >= newStarts[j] && starts[i] <= newEnds[j] || ends[i] >= newStarts[j] && ends[i] <= newEnds[j]) {
+                return false;
+            }
+            if (newStarts[j] >= starts[i] && newStarts[j] <= ends[i] || newEnds[j] >= starts[i] && newEnds[j] <= ends[i]) {
+                return false;
+            }
+            if (newStarts[j] > starts[i]) {
+                newStarts.splice(j-1, 0, starts[i]);
+                newEnds.splice(j-1, 0, ends[i]);
+                break;
+            }
+        }
+    }
+    return true;
+}
+
+alert(has_conflicts(starts, ends));

@@ -15,7 +15,6 @@ $().ready(function(){
     var field = new Field(r, 8);
 });
 
-
 function Field(raphael, dimension)
 {
     var squareSize = 50, circleR = 20;
@@ -32,6 +31,68 @@ function Field(raphael, dimension)
         top : (screen.availHeight - height) / 2
     }
 
+    var clearParent = function()
+    {
+        for(var i = 0; i < this.cells.length; i++) {
+            for (var j = 0; j < this.cell.length; j++) {
+                this.cells[i][j].parent = null;
+            }
+        }
+    }
+    gameField = this;
+    var searchPath = function(current, destination)
+    {
+        var whiteList = new Array(), blackList = new Array();
+        var startPoint = current;
+        blackList.push(current);
+        gameField.cells[current.i][current.j].g = 0;
+
+        while (current != destination) {
+                var checkArray = [
+                    {i:current.i - 1, j: current.j },
+                    {i:current.i + 1, j: current.j },
+                    {i: current.i, j: current.j + 1},
+                    {i: current.i, j: current.j - 1}
+                ], max = 0, maxPoint;
+
+                for (i = 0; i < checkArray.length; i++) {
+                    if (gameField.cells[checkArray[i].i][checkArray[i].j] && !gameField.cells[checkArray[i].i][checkArray[i].j].ball) {
+                        if(findObjectInArray({i: checkArray[i].i, j:checkArray[i].j}, whiteList) == -1) {
+                            whiteList.push(this.cells[checkArray[i].i][checkArray[i].j]);
+                            whiteList[whiteList.length - 1].parent = current;
+                            var point = {i: checkArray[i].i, j: checkArray[i].j};
+                            gameField.cells[checkArray[i].i][checkArray[i].j].g = current.g + 10;
+                            gameField.cells[checkArray[i].i][checkArray[i].j].h = heuristic(point);
+                            gameField.cells[checkArray[i].i][checkArray[i].j].f =
+                                gameField.cells[checkArray[i].i][checkArray[i].j].g +
+                                gameField.cells[checkArray[i].i][checkArray[i].j].h;
+                        }
+                    }
+                    if (gameField.cells[checkArray[i].i][checkArray[i].j].f > max) {
+                        max = gameField.cells[checkArray[i].i][checkArray[i].j].f;
+                        maxPoint = checkArray[i];
+                    }
+                }
+                current = checkArray;
+        }
+
+        function heuristic(point){
+            var result = Math.abs(point.i - destination.i) + Math.abs(point.j - destination.j);
+            return result;
+        }
+
+        function getPath(point, begining)
+        {
+            var Path = new Array();
+            current = gameField.cells[point.i][point.j];
+            while(current != gameField.cells[begining.i][begining.j]) {
+                Path.unshift(gameField.cells[current.i][current.j]);
+                current = current.parent;
+            }
+            return Path;
+        }
+        return getPath(current, startPoint);
+    }
 //  create cells block
     for (var i = 0; i < dimension; i++) {
         this.cells[i] = new Array(dimension);
@@ -43,15 +104,21 @@ function Field(raphael, dimension)
                 squareSize
             );
             this.cells[i][j].attr({fill: "#FFF5EE", stroke: "#000", strokeWidth: "2px" });
+            this.cells[i][j].i = i;
+            this.cells[i][j].j = j;
+            gameField = this;
             this.cells[i][j].click(function(e){
-                alert(4);
-                if (this.balls.animation) {
 
+                if (gameField.balls.animation) {
+                    var Path = searchPath(
+                        {i: gameField.balls.object.cell.i, j: gameField.balls.object.cell.j},
+                        {i: this.i, j: this.j}
+                    );
+                    alert(Path);
                 }
             });
         }
     }
-
 
     this.createBalls = function (n) {
         var k, n, empty;
@@ -88,6 +155,7 @@ function Field(raphael, dimension)
                             $this.animate({cy: y}, 70, "linear");
                         })
                     },200)
+                    gameField.balls.object = this;
                 } else {
                     clearInterval(gameField.balls.animation);
                     gameField.balls.animation = false;
@@ -114,6 +182,15 @@ function Field(raphael, dimension)
         return Math.ceil((Math.random() * 100) % max);
     }
 
-
-
 }
+
+function findObjectInArray(object, array){
+    for(i = 0; i < array.length; i++) {
+        if (JSON.stringify(object) === JSON.stringify(array[i])) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
