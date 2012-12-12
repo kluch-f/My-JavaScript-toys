@@ -47,7 +47,7 @@ function Field(raphael, dimension)
         blackList.push(current);
         gameField.cells[current.i][current.j].g = 0;
 
-        while (current.i != destination.i && current.j != destination.j) {
+        while (current.i != destination.i || current.j != destination.j) {
                 var checkArray = [
                     {i:current.i - 1, j: current.j },
                     {i:current.i + 1, j: current.j },
@@ -56,12 +56,12 @@ function Field(raphael, dimension)
                 ], min = Infinity, minPoint;
 
                 for (i = 0; i < checkArray.length; i++) {
-                    if (gameField.cells[checkArray[i].i][checkArray[i].j] && !gameField.cells[checkArray[i].i][checkArray[i].j].ball) {
+                    if (gameField.cells[checkArray[i].i] && gameField.cells[checkArray[i].i][checkArray[i].j] && !gameField.cells[checkArray[i].i][checkArray[i].j].ball) {
                         if(findObjectInArray({i: checkArray[i].i, j:checkArray[i].j}, whiteList) == -1) {
                             whiteList.push(checkArray[i]);
-                            whiteList[whiteList.length - 1].parent = current;
-                            gameField.cells[checkArray[i].i][checkArray[i].j].g = gameField.cells[current.i][current.j].g + 10;
-                            gameField.cells[checkArray[i].i][checkArray[i].j].h = heuristic(checkArray[i]);
+                            gameField.cells[checkArray[i].i][checkArray[i].j].parent = current;
+                            gameField.cells[checkArray[i].i][checkArray[i].j].g = 10;
+                            gameField.cells[checkArray[i].i][checkArray[i].j].h = heuristic(checkArray[i]) * 10;
                             gameField.cells[checkArray[i].i][checkArray[i].j].f =
                                 gameField.cells[checkArray[i].i][checkArray[i].j].g +
                                 gameField.cells[checkArray[i].i][checkArray[i].j].h;
@@ -86,8 +86,8 @@ function Field(raphael, dimension)
             var Path = new Array();
             current = gameField.cells[point.i][point.j];
             while(current != gameField.cells[begining.i][begining.j]) {
-                Path.unshift(gameField.cells[current.i][current.j]);
-                current = current.parent;
+                Path.unshift(current);
+                current = gameField.cells[current.parent.i][current.parent.j];
             }
             return Path;
         }
@@ -108,13 +108,33 @@ function Field(raphael, dimension)
             this.cells[i][j].j = j;
             gameField = this;
             this.cells[i][j].click(function(e){
-
+                var timeInterval = 100;
                 if (gameField.balls.animation) {
                     var Path = searchPath(
                         {i: gameField.balls.object.cell.i, j: gameField.balls.object.cell.j},
                         {i: this.i, j: this.j}
                     );
-                    alert(Path);
+                    //alert(Path);
+                    var j = 0;
+                    var ballSliding = function() {
+                        if(j < Path.length) {
+                            elm = Path[j];
+                            j++;
+                            gameField.balls.object.animate({
+                                cx: elm.attr('x') + squareSize / 2,
+                                cy: elm.attr('y') + squareSize / 2
+                            }, timeInterval,"linear", ballSliding);
+                        }
+                    }
+                    ballSliding();
+
+                    clearInterval(gameField.balls.animation);
+
+                    this.ball = gameField.balls.object;
+                    gameField.balls.object.cell.ball = null;
+                    gameField.balls.object.cell = this;
+                    gameField.balls.animation = false;
+                    gameField.balls.object = null;
                 }
             });
         }
