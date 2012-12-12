@@ -47,33 +47,33 @@ function Field(raphael, dimension)
         blackList.push(current);
         gameField.cells[current.i][current.j].g = 0;
 
-        while (current != destination) {
+        while (current.i != destination.i && current.j != destination.j) {
                 var checkArray = [
                     {i:current.i - 1, j: current.j },
                     {i:current.i + 1, j: current.j },
                     {i: current.i, j: current.j + 1},
                     {i: current.i, j: current.j - 1}
-                ], max = 0, maxPoint;
+                ], min = Infinity, minPoint;
 
                 for (i = 0; i < checkArray.length; i++) {
                     if (gameField.cells[checkArray[i].i][checkArray[i].j] && !gameField.cells[checkArray[i].i][checkArray[i].j].ball) {
                         if(findObjectInArray({i: checkArray[i].i, j:checkArray[i].j}, whiteList) == -1) {
-                            whiteList.push(this.cells[checkArray[i].i][checkArray[i].j]);
+                            whiteList.push(checkArray[i]);
                             whiteList[whiteList.length - 1].parent = current;
-                            var point = {i: checkArray[i].i, j: checkArray[i].j};
-                            gameField.cells[checkArray[i].i][checkArray[i].j].g = current.g + 10;
-                            gameField.cells[checkArray[i].i][checkArray[i].j].h = heuristic(point);
+                            gameField.cells[checkArray[i].i][checkArray[i].j].g = gameField.cells[current.i][current.j].g + 10;
+                            gameField.cells[checkArray[i].i][checkArray[i].j].h = heuristic(checkArray[i]);
                             gameField.cells[checkArray[i].i][checkArray[i].j].f =
                                 gameField.cells[checkArray[i].i][checkArray[i].j].g +
                                 gameField.cells[checkArray[i].i][checkArray[i].j].h;
                         }
-                    }
-                    if (gameField.cells[checkArray[i].i][checkArray[i].j].f > max) {
-                        max = gameField.cells[checkArray[i].i][checkArray[i].j].f;
-                        maxPoint = checkArray[i];
+
+                        if (gameField.cells[checkArray[i].i][checkArray[i].j].f < min) {
+                            min = gameField.cells[checkArray[i].i][checkArray[i].j].f;
+                            minPoint = checkArray[i];
+                        }
                     }
                 }
-                current = checkArray;
+                current = minPoint;
         }
 
         function heuristic(point){
