@@ -7,6 +7,26 @@
  */
 
 $().ready(function(){
+
+    (function() {
+        Raphael.fn.addGuides = function() {
+            this.ca.guide = function(g) {
+                return {
+                    guide: g
+                };
+            };
+            this.ca.along = function(percent) {
+                var g = this.attr("guide");
+                var len = g.getTotalLength();
+                var point = g.getPointAtLength(percent * len);
+                var t = {
+                    transform: "t" + point.x + " " + point.y
+                };
+                return t;
+            };
+        };
+    })();
+
     width = screen.availWidth;
     height = screen.availHeight;
 
@@ -84,12 +104,25 @@ function Field(raphael, dimension)
         function getPath(point, begining)
         {
             var Path = new Array();
+
+            var resultPath = " z";
             current = gameField.cells[point.i][point.j];
             while(current != gameField.cells[begining.i][begining.j]) {
                 Path.unshift(current);
+                resultPath = " l "
+                    + (current.attr('x') - gameField.cells[current.parent.i][current.parent.j].attr('x'))
+                    + " "
+                    + (current.attr('y') - gameField.cells[current.parent.i][current.parent.j].attr('y'))
+                    + resultPath;
                 current = gameField.cells[current.parent.i][current.parent.j];
+
             }
-            return Path;
+            resultPath = "M "
+                + current.ball.attr('cx') + squareSize / 2
+                + " "
+                + current.ball.attr('cy') + squareSize / 2
+                + resultPath;
+            return resultPath;
         }
         return getPath(current, startPoint);
     }
@@ -108,7 +141,7 @@ function Field(raphael, dimension)
             this.cells[i][j].j = j;
             gameField = this;
             this.cells[i][j].click(function(e){
-                var timeInterval = 100;
+                var timeInterval = 1500;
                 if (gameField.balls.animation) {
                     var Path = searchPath(
                         {i: gameField.balls.object.cell.i, j: gameField.balls.object.cell.j},
@@ -116,17 +149,8 @@ function Field(raphael, dimension)
                     );
                     //alert(Path);
                     var j = 0;
-                    var ballSliding = function() {
-                        if(j < Path.length) {
-                            elm = Path[j];
-                            j++;
-                            gameField.balls.object.animate({
-                                cx: elm.attr('x') + squareSize / 2,
-                                cy: elm.attr('y') + squareSize / 2
-                            }, timeInterval,"linear", ballSliding);
-                        }
-                    }
-                    ballSliding();
+                    //alert(Path);
+                    gameField.balls.object.animate({path: Path}, timeInterval,"linear");
 
                     clearInterval(gameField.balls.animation);
 
