@@ -20,7 +20,7 @@ $().ready(function(){
                 var len = g.getTotalLength();
                 var point = g.getPointAtLength(percent * len);
                 var t = {
-                    transform: "t" + point.x + " " + point.y
+                    transform: "t" + point.x + "," + point.y
                 };
                 return t;
             };
@@ -31,6 +31,8 @@ $().ready(function(){
     height = screen.availHeight;
 
     var r = Raphael("game-field", width, height);
+    r.addGuides();
+
 
     var field = new Field(r, 8);
 });
@@ -76,7 +78,10 @@ function Field(raphael, dimension)
                 ], min = Infinity, minPoint;
 
                 for (i = 0; i < checkArray.length; i++) {
-                    if (gameField.cells[checkArray[i].i] && gameField.cells[checkArray[i].i][checkArray[i].j] && !gameField.cells[checkArray[i].i][checkArray[i].j].ball) {
+                    if (gameField.cells[checkArray[i].i]
+                        && gameField.cells[checkArray[i].i][checkArray[i].j]
+                        && !gameField.cells[checkArray[i].i][checkArray[i].j].ball
+                        && findObjectInArray({i: checkArray[i].i, j:checkArray[i].j}, blackList) == -1) {
                         if(findObjectInArray({i: checkArray[i].i, j:checkArray[i].j}, whiteList) == -1) {
                             whiteList.push(checkArray[i]);
                             gameField.cells[checkArray[i].i][checkArray[i].j].parent = current;
@@ -92,6 +97,7 @@ function Field(raphael, dimension)
                             minPoint = checkArray[i];
                         }
                     }
+                    blackList.push(current);
                 }
                 current = minPoint;
         }
@@ -105,24 +111,28 @@ function Field(raphael, dimension)
         {
             var Path = new Array();
 
-            var resultPath = " z";
+            var resultPath = " ";
             current = gameField.cells[point.i][point.j];
             while(current != gameField.cells[begining.i][begining.j]) {
                 Path.unshift(current);
                 resultPath = " l "
-                    + (current.attr('x') - gameField.cells[current.parent.i][current.parent.j].attr('x'))
+                    + (parseInt(current.attr('x')) - parseInt(gameField.cells[current.parent.i][current.parent.j].attr('x')))
                     + " "
-                    + (current.attr('y') - gameField.cells[current.parent.i][current.parent.j].attr('y'))
+                    + (parseInt(current.attr('y')) - parseInt(gameField.cells[current.parent.i][current.parent.j].attr('y')))
                     + resultPath;
                 current = gameField.cells[current.parent.i][current.parent.j];
 
             }
-            resultPath = "M "
-                + current.ball.attr('cx') + squareSize / 2
-                + " "
-                + current.ball.attr('cy') + squareSize / 2
+            resultPath = "M 0 0 "
+//                + (parseInt(current.ball.attr('cx')) + squareSize / 2)
+//                + " "
+//                + (parseInt(current.ball.attr('cy')) + squareSize / 2)
                 + resultPath;
-            return resultPath;
+            return new Array(
+                raphael.path(resultPath).attr({'stroke-width':'0px'}),
+                gameField.cells[point.i][point.j]
+            );
+
         }
         return getPath(current, startPoint);
     }
@@ -141,7 +151,7 @@ function Field(raphael, dimension)
             this.cells[i][j].j = j;
             gameField = this;
             this.cells[i][j].click(function(e){
-                var timeInterval = 1500;
+                var timeInterval = 2000;
                 if (gameField.balls.animation) {
                     var Path = searchPath(
                         {i: gameField.balls.object.cell.i, j: gameField.balls.object.cell.j},
@@ -150,7 +160,12 @@ function Field(raphael, dimension)
                     //alert(Path);
                     var j = 0;
                     //alert(Path);
-                    gameField.balls.object.animate({path: Path}, timeInterval,"linear");
+//                    alert(gameField.balls.object.attr('transform'));
+                    gameField.balls.object.attr({guide: Path[0], along: 0}).animate({along: 1}, timeInterval, 'linear',
+                    function(){
+                        this.attr({'transform': ""});
+                        this.attr({cx: parseInt(Path[1].attr('x')) + squareSize / 2, cy: parseInt(Path[1].attr('y')) + squareSize/2});
+                    });
 
                     clearInterval(gameField.balls.animation);
 
@@ -159,6 +174,9 @@ function Field(raphael, dimension)
                     gameField.balls.object.cell = this;
                     gameField.balls.animation = false;
                     gameField.balls.object = null;
+
+                    setTimeout(function(){gameField.createBalls(3)}, timeInterval);
+
                 }
             });
         }
