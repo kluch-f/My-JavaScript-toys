@@ -158,6 +158,7 @@ function Field(raphael, dimension)
             this.cells[i][j].j = j;
             gameField = this;
             this.cells[i][j].click(function(e){
+                var checkBalls = new Array();
                 var timeInterval = 2000;
                 if (gameField.balls.animation) {
                     var Path = searchPath(
@@ -181,11 +182,12 @@ function Field(raphael, dimension)
                         gameField.balls.object.cell.ball = null;
                         gameField.balls.object.cell = this;
                         gameField.balls.animation = false;
+                        checkBalls.push(gameField.balls.object);
                         gameField.balls.object = null;
 
                         setTimeout(function(){gameField.createBalls(3)}, timeInterval);
 
-                        this.removeBalls();
+                        gameField.removeBalls(checkBalls);
                     }
                 }
             });
@@ -254,9 +256,28 @@ function Field(raphael, dimension)
         return Math.ceil((Math.random() * 100) % max);
     }
 
-    this.removeBalls = function () {
-        for (var i = 0; i < this.balls.length; i++)
+    this.removeBalls = function (balls) {
+        var resultBalls = [];
+        for (var i = 0; i < balls.length; i++)
         {
+            var checkItems = [
+                {i: balls[i].cell.i + 1, j: balls[i].cell.j},
+                {i: balls[i].cell.i + 1, j: balls[i].cell.j + 1},
+                {i: balls[i].cell.i, j: balls[i].cell.j + 1},
+                {i: balls[i].cell.i - 1, j: balls[i].cell.j},
+                {i: balls[i].cell.i - 1, j: balls[i].cell.j - 1},
+                {i: balls[i].cell.i, j: balls[i].cell.j - 1}
+                ],
+                color = balls[i].attr('fill');
+
+
+            for (var j = 0; j < checkItems.length; j++ ) {
+                var num = checkItems[j];
+
+                if (this.cells[num.i] && this.cells[num.i][num.j] && this.cells[num.i][num.j].ball.attr('fill') == color) {
+                    resultBalls.push(balls[i]);
+                }
+            }
 
         }
     }
