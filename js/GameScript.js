@@ -276,9 +276,45 @@ function Field(raphael, dimension)
 
                 if (this.cells[num.i] && this.cells[num.i][num.j] && this.cells[num.i][num.j].ball.attr('fill') == color) {
                     resultBalls.push(balls[i]);
+                    var iDiff, jDiff, numClone;
+                    iDiff = num.i - balls[i];
+                    jDiff = num.j - balls[i];
+                    numClone = {i: num.i, j: num.j};
+
+                    while (this.cells[numClone.i] && this.cells[numClone.i][numClone.j] && this.cells[numClone.i][numClone.j].ball.attr('fill') == color) {
+                        resultBalls.push(this.cells[numClone.i][numClone.j].ball);
+                        numClone.i = numClone.i + iDiff;
+                        numClone.j = numClone.j + jDiff;
+                    }
+                    iDiff = - iDiff;
+                    jDiff = - jDiff;
+                    numClone = {i: num.i, j: num.j};
+                    while (this.cells[numClone.i] && this.cells[numClone.i][numClone.j] && this.cells[numClone.i][numClone.j].ball.attr('fill') == color) {
+                        resultBalls.push(this.cells[numClone.i][numClone.j].ball);
+                        numClone.i = numClone.i + iDiff;
+                        numClone.j = numClone.j + jDiff;
+                    }
+
+                    if (resultBalls.length >=4)
+                    {
+                        removeBalls(resultBalls);
+                    }
                 }
             }
 
+
+
+        }
+
+        function removeBalls(balls)
+        {
+            animationTime = 200;
+            for (i = 0; i < balls.length; i++ ) {
+                balls[i].animate({'r': '0px'}, animationTime, 'linear', function(){
+                    this.cell.ball = null;
+                    this.remove();
+                });
+            }
         }
     }
 
