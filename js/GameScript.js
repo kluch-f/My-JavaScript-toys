@@ -185,9 +185,12 @@ function Field(raphael, dimension)
                         checkBalls.push(gameField.balls.object);
                         gameField.balls.object = null;
 
-                        setTimeout(function(){gameField.createBalls(3)}, timeInterval);
+                        setTimeout(function(){
+                            gameField.createBalls(3);
+                            gameField.removeBalls(checkBalls);
+                        }, timeInterval);
 
-                        gameField.removeBalls(checkBalls);
+
                     }
                 }
             });
@@ -274,14 +277,19 @@ function Field(raphael, dimension)
             for (var j = 0; j < checkItems.length; j++ ) {
                 var num = checkItems[j];
 
-                if (this.cells[num.i] && this.cells[num.i][num.j] && this.cells[num.i][num.j].ball.attr('fill') == color) {
+                if (
+                    this.cells[num.i]
+                        && this.cells[num.i][num.j]
+                        && this.cells[num.i][num.j].ball
+                        && this.cells[num.i][num.j].ball.attr('fill') == color
+                    ) {
                     resultBalls.push(balls[i]);
                     var iDiff, jDiff, numClone;
-                    iDiff = num.i - balls[i];
-                    jDiff = num.j - balls[i];
+                    iDiff = num.i - balls[i].cell.i;
+                    jDiff = num.j - balls[i].cell.j;
                     numClone = {i: num.i, j: num.j};
 
-                    while (this.cells[numClone.i] && this.cells[numClone.i][numClone.j] && this.cells[numClone.i][numClone.j].ball.attr('fill') == color) {
+                    while (this.cells[numClone.i] && this.cells[numClone.i][numClone.j] && this.cells[numClone.i][numClone.j].ball && this.cells[numClone.i][numClone.j].ball.attr('fill') == color) {
                         resultBalls.push(this.cells[numClone.i][numClone.j].ball);
                         numClone.i = numClone.i + iDiff;
                         numClone.j = numClone.j + jDiff;
@@ -289,22 +297,25 @@ function Field(raphael, dimension)
                     iDiff = - iDiff;
                     jDiff = - jDiff;
                     numClone = {i: num.i, j: num.j};
-                    while (this.cells[numClone.i] && this.cells[numClone.i][numClone.j] && this.cells[numClone.i][numClone.j].ball.attr('fill') == color) {
-                        resultBalls.push(this.cells[numClone.i][numClone.j].ball);
+                    while (this.cells[numClone.i] && this.cells[numClone.i][numClone.j] && this.cells[numClone.i][numClone.j].ball && this.cells[numClone.i][numClone.j].ball.attr('fill') == color) {
                         numClone.i = numClone.i + iDiff;
                         numClone.j = numClone.j + jDiff;
+                        resultBalls.push(this.cells[numClone.i][numClone.j].ball);
                     }
 
                     if (resultBalls.length >=4)
                     {
                         removeBalls(resultBalls);
                     }
+
                 }
             }
 
 
 
         }
+
+
 
         function removeBalls(balls)
         {
