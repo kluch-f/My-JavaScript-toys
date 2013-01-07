@@ -275,6 +275,7 @@ function Field(raphael, dimension)
 
 
             for (var j = 0; j < checkItems.length; j++ ) {
+                resultBalls = [];
                 var num = checkItems[j];
 
                 if (
